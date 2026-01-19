@@ -32,9 +32,13 @@ services:
     container_name: superset_app
     env_file:
       - .env
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DB}
+      SUPERSET_CONFIG_PATH: /app/superset_config.py
     volumes:
       - superset_home:/app/superset_home
       - superset_data:/app/superset_data
+      - ./superset_config.py:/app/superset_config.py:ro
     ports:
       - "8089:8088"
     depends_on:
@@ -48,18 +52,23 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    command: bash -c "pip install psycopg2-binary && /usr/bin/run-server.sh"
     networks:
       - superset_network
 
   superset-init:
     image: zlsmshoqvwt6q1.xuanyuan.run/apache/superset:4.1.3
     container_name: superset_init
-    command: bash -c "superset db upgrade && superset fab create-admin --username ${ADMIN_USERNAME} --firstname ${ADMIN_FIRSTNAME} --lastname ${ADMIN_LASTNAME} --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD} && superset init && echo 'Superset initialization completed'"
+    command: bash -c "pip install psycopg2-binary && superset db upgrade && superset fab create-admin --username ${ADMIN_USERNAME} --firstname ${ADMIN_FIRSTNAME} --lastname ${ADMIN_LASTNAME} --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD} && superset load_examples && superset init && echo 'Superset initialization completed'"
     env_file:
       - .env
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DB}
+      SUPERSET_CONFIG_PATH: /app/superset_config.py
     volumes:
       - superset_home:/app/superset_home
       - superset_data:/app/superset_data
+      - ./superset_config.py:/app/superset_config.py:ro
     depends_on:
       db:
         condition: service_healthy
