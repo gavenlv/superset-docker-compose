@@ -1,17 +1,15 @@
-version: '3.8'
-
 services:
   db:
     image: zlsmshoqvwt6q1.xuanyuan.run/postgres:16
     container_name: superset_db
     environment:
-      POSTGRES_USER: superset
-      POSTGRES_PASSWORD: superset
-      POSTGRES_DB: superset
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_DB}
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U superset"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,17 +30,8 @@ services:
   superset:
     image: zlsmshoqvwt6q1.xuanyuan.run/apache/superset:4.1.3
     container_name: superset_app
-    environment:
-      SUPERSET_LOAD_EXAMPLES: "yes"
-      SUPERSET_SECRET_KEY: "your-secret-key-change-this-in-production"
-      DATABASE_DIALECT: postgresql
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_USER: superset
-      DATABASE_PASSWORD: superset
-      DATABASE_DB: superset
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+    env_file:
+      - .env
     volumes:
       - superset_home:/app/superset_home
       - superset_data:/app/superset_data
@@ -65,18 +54,9 @@ services:
   superset-init:
     image: zlsmshoqvwt6q1.xuanyuan.run/apache/superset:4.1.3
     container_name: superset_init
-    command: bash -c "superset db upgrade && superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.com --password admin && superset init && echo 'Superset initialization completed'"
-    environment:
-      SUPERSET_LOAD_EXAMPLES: "yes"
-      SUPERSET_SECRET_KEY: "your-secret-key-change-this-in-production"
-      DATABASE_DIALECT: postgresql
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_USER: superset
-      DATABASE_PASSWORD: superset
-      DATABASE_DB: superset
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+    command: bash -c "superset db upgrade && superset fab create-admin --username ${ADMIN_USERNAME} --firstname ${ADMIN_FIRSTNAME} --lastname ${ADMIN_LASTNAME} --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD} && superset init && echo 'Superset initialization completed'"
+    env_file:
+      - .env
     volumes:
       - superset_home:/app/superset_home
       - superset_data:/app/superset_data
