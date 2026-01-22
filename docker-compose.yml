@@ -28,7 +28,9 @@ services:
       - superset_network
 
   superset:
-    image: zlsmshoqvwt6q1.xuanyuan.run/apache/superset:4.1.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: superset_app
     env_file:
       - .env
@@ -52,14 +54,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    command: bash -c "pip install psycopg2-binary && /usr/bin/run-server.sh"
+    command: /usr/bin/run-server.sh
     networks:
       - superset_network
 
   superset-init:
-    image: zlsmshoqvwt6q1.xuanyuan.run/apache/superset:4.1.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: superset_init
-    command: bash -c "pip install psycopg2-binary && superset db upgrade && superset fab create-admin --username ${ADMIN_USERNAME} --firstname ${ADMIN_FIRSTNAME} --lastname ${ADMIN_LASTNAME} --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD} && superset load_examples && superset init && echo 'Superset initialization completed'"
+    command: bash -c "superset db upgrade && superset fab create-admin --username ${ADMIN_USERNAME} --firstname ${ADMIN_FIRSTNAME} --lastname ${ADMIN_LASTNAME} --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD} && superset load_examples && superset init && echo 'Superset initialization completed'"
     env_file:
       - .env
     environment:
