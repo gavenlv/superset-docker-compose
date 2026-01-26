@@ -1,4 +1,4 @@
-FROM zlsmshoqvwt6q1.xuanyuan.run/apache/superset:latest
+FROM apache/superset:latest
 
 USER root
 
